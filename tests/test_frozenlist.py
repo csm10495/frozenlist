@@ -1,6 +1,7 @@
 # FIXME:
 # mypy: disable-error-code="misc"
 
+import pickle
 from collections.abc import MutableSequence
 from copy import deepcopy
 
@@ -371,6 +372,23 @@ class FrozenListMixin:
         assert len(copied[0]) == 3
         assert len(copied[1]) == 3  # Should see the change
         assert len(shared) == 2  # Original unchanged
+
+    @pytest.mark.parametrize("freeze", [True, False])
+    def test_picklability(self, freeze: bool) -> None:
+        # Test that the list can be pickled and unpickled successfully
+        orig = self.FrozenList([1, 2, 3])
+        if freeze:
+            orig.freeze()
+
+        assert orig.frozen == freeze
+
+        pickled = pickle.dumps(orig)
+        unpickled = pickle.loads(pickled)
+        assert unpickled == orig
+        assert unpickled is not orig
+        assert list(unpickled) == list(orig)
+
+        assert unpickled.frozen == freeze
 
 
 class TestFrozenList(FrozenListMixin):

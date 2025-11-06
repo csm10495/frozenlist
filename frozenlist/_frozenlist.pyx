@@ -144,5 +144,15 @@ cdef class FrozenList:
 
         return new_list
 
+    def __reduce__(self):
+        return (
+            self.__class__,
+            (self._items,),
+            {"_frozen": self._frozen.load()},
+        )
+
+    def __setstate__(self, state):
+        self._frozen.store(state["_frozen"])
+
 
 MutableSequence.register(FrozenList)

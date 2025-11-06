@@ -1,0 +1,2 @@
+Fix bug where FrozenList could not be pickled/unpickled.
+-- by :user:`csm10495`.

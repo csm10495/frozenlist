@@ -302,6 +302,7 @@ unicode
 unittest
 Unittest
 unix
+unpickled
 unsets
 unstripped
 upstr

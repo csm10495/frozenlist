@@ -1,11 +1,17 @@
+import copy
 import os
 import types
 from collections.abc import MutableSequence
 from functools import total_ordering
+from typing import Any
 
 __version__ = "1.8.1.dev0"
 
-__all__ = ("FrozenList", "PyFrozenList")  # type: Tuple[str, ...]
+__all__ = (
+    "FrozenList",
+    "PyFrozenList",
+    "_reconstruct_pyfrozenlist",
+)  # type: Tuple[str, ...]
 
 
 NO_EXTENSIONS = bool(os.environ.get("FROZENLIST_NO_EXTENSIONS"))  # type: bool
@@ -73,7 +79,43 @@ class FrozenList(MutableSequence):
         else:
             raise RuntimeError("Cannot hash unfrozen list.")
 
+    def __deepcopy__(self, memo: dict[int, Any]):
+        obj_id = id(self)
 
+        # Return existing copy if already processed (circular reference)
+        if obj_id in memo:
+            return memo[obj_id]
+
+        # Create new instance and register immediately
+        new_list = self.__class__([])
+        memo[obj_id] = new_list
+
+        # Deep copy items
+        new_list._items[:] = [copy.deepcopy(item, memo) for item in self._items]
+
+        # Preserve frozen state
+        if self._frozen:
+            new_list.freeze()
+
+        return new_list
+
+    def __reduce__(self):
+        return (
+            _reconstruct_pyfrozenlist,
+            (self._items, self._frozen),
+        )
+
+
+def _reconstruct_pyfrozenlist(items, frozen):
+    """Helper function to reconstruct the pure Python FrozenList during unpickling.
+    This function is needed since otherwise the class renaming confuses pickle."""
+    fl = PyFrozenList(items)
+    if frozen:
+        fl.freeze()
+    return fl
+
+
+# Store a reference to the pure Python implementation before it's potentially replaced
 PyFrozenList = FrozenList
 
 
