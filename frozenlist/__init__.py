@@ -106,7 +106,7 @@ class FrozenList(MutableSequence):
         )
 
 
-def _reconstruct_pyfrozenlist(items, frozen):
+def _reconstruct_pyfrozenlist(items: list[Any], frozen: bool) -> "PyFrozenList":
     """Helper function to reconstruct the pure Python FrozenList during unpickling.
     This function is needed since otherwise the class renaming confuses pickle."""
     fl = PyFrozenList(items)

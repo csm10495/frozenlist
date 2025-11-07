@@ -274,6 +274,20 @@ class FrozenListMixin:
         with pytest.raises(RuntimeError):
             copied.append(4)
 
+    def test_deepcopy_frozen_circular(self) -> None:
+        orig = self.FrozenList([1, 2])
+        orig.append(orig)  # Create circular reference
+        orig.freeze()
+        copied = deepcopy(orig)
+        assert copied[0] == 1
+        assert copied[1] == 2
+        assert len(copied[2]) == 3
+        assert copied[2][0] == 1
+        assert copied[2][1] == 2
+        assert len(copied[2][2]) == 3
+        # ... and so on. Testing equality when a structure includes itself is tough.
+        assert orig.frozen
+
     def test_deepcopy_nested(self) -> None:
         inner = self.FrozenList([1, 2])
         orig = self.FrozenList([inner, 3])
