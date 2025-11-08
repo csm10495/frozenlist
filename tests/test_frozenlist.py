@@ -387,7 +387,7 @@ class FrozenListMixin:
         assert len(copied[1]) == 3  # Should see the change
         assert len(shared) == 2  # Original unchanged
 
-    @pytest.mark.parametrize("freeze", [True, False])
+    @pytest.mark.parametrize("freeze", [True, False], ids=["frozen", "not frozen"])
     def test_picklability(self, freeze: bool) -> None:
         # Test that the list can be pickled and unpickled successfully
         orig = self.FrozenList([1, 2, 3])
