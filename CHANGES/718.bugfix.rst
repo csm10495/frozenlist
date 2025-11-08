@@ -1,2 +1,5 @@
-Fix bug where FrozenList could not be pickled/unpickled.
+Fixed a bug where FrozenList could not be pickled/unpickled.
+
+Pickling is a requirement for FrozenList to be able to be passed to multiprocessing Processes. Without this
+fix, users receive a TypeError upon attempting to pickle a FrozenList.
 -- by :user:`csm10495`.

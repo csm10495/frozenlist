@@ -3,7 +3,6 @@ import os
 import types
 from collections.abc import MutableSequence
 from functools import total_ordering
-from typing import Any
 
 __version__ = "1.8.1.dev0"
 
@@ -105,7 +104,7 @@ class FrozenList(MutableSequence):
         )
 
 
-def _reconstruct_pyfrozenlist(items: list[Any], frozen: bool) -> "PyFrozenList":
+def _reconstruct_pyfrozenlist(items: list[object], frozen: bool) -> "PyFrozenList":
     """Helper function to reconstruct the pure Python FrozenList during unpickling.
     This function is needed since otherwise the class renaming confuses pickle."""
     fl = PyFrozenList(items)
