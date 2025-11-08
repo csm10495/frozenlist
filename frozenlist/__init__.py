@@ -78,7 +78,7 @@ class FrozenList(MutableSequence):
         else:
             raise RuntimeError("Cannot hash unfrozen list.")
 
-    def __deepcopy__(self, memo: dict[int, Any]):
+    def __deepcopy__(self, memo: dict[int, object]):
         obj_id = id(self)
 
         # Return existing copy if already processed (circular reference)
