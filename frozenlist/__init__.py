@@ -10,7 +10,6 @@ __version__ = "1.8.1.dev0"
 __all__ = (
     "FrozenList",
     "PyFrozenList",
-    "_reconstruct_pyfrozenlist",
 )  # type: Tuple[str, ...]
 
 
