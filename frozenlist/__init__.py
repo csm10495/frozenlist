@@ -6,10 +6,7 @@ from functools import total_ordering
 
 __version__ = "1.8.1.dev0"
 
-__all__ = (
-    "FrozenList",
-    "PyFrozenList",
-)  # type: Tuple[str, ...]
+__all__ = ("FrozenList", "PyFrozenList")  # type: Tuple[str, ...]
 
 
 NO_EXTENSIONS = bool(os.environ.get("FROZENLIST_NO_EXTENSIONS"))  # type: bool
@@ -104,17 +101,17 @@ class FrozenList(MutableSequence):
         )
 
 
-def _reconstruct_pyfrozenlist(items: list[object], frozen: bool) -> "PyFrozenList":
+# Store a reference to the pure Python implementation before it's potentially replaced
+PyFrozenList = FrozenList
+
+
+def _reconstruct_pyfrozenlist(items: list[object], frozen: bool) -> PyFrozenList:
     """Helper function to reconstruct the pure Python FrozenList during unpickling.
     This function is needed since otherwise the class renaming confuses pickle."""
     fl = PyFrozenList(items)
     if frozen:
         fl.freeze()
     return fl
-
-
-# Store a reference to the pure Python implementation before it's potentially replaced
-PyFrozenList = FrozenList
 
 
 if not NO_EXTENSIONS:
