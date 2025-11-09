@@ -9,6 +9,13 @@ import pytest
 
 from frozenlist import FrozenList, PyFrozenList
 
+try:
+    from frozenlist import CFrozenList
+
+    HAS_CFROZENLIST = True
+except ImportError:
+    HAS_CFROZENLIST = False
+
 
 class FrozenListMixin:
     FrozenList = NotImplemented
@@ -414,7 +421,18 @@ class FrozenListMixin:
 
         # If this test breaks, we've changed the frozenlist data structure in an incompatible way
         # with previous pickled binaries.
-        if self.FrozenList is FrozenList:
+        if self.FrozenList is PyFrozenList:
+            if freeze:
+                assert (
+                    pickled
+                    == b"cfrozenlist\nPyFrozenList\np0\n((lp1\nI1\naI2\natp2\nRp3\n(dp4\nV_frozen\np5\nI01\nsb."
+                )
+            else:
+                assert (
+                    pickled
+                    == b"cfrozenlist\nPyFrozenList\np0\n((lp1\nI1\naI2\natp2\nRp3\n(dp4\nV_frozen\np5\nI00\nsb."
+                )
+        elif self.FrozenList is FrozenList:
             if freeze:
                 assert (
                     pickled
@@ -425,22 +443,24 @@ class FrozenListMixin:
                     pickled
                     == b"cfrozenlist._frozenlist\nFrozenList\np0\n((lp1\nI1\naI2\natp2\nRp3\n(dp4\nV_frozen\np5\nI00\nsb."
                 )
-        elif self.FrozenList is PyFrozenList:
-            if freeze:
-                assert (
-                    pickled
-                    == b"cfrozenlist\n_reconstruct_pyfrozenlist\np0\n((lp1\nI1\naI2\naI01\ntp2\nRp3\n."
-                )
-            else:
-                assert (
-                    pickled
-                    == b"cfrozenlist\n_reconstruct_pyfrozenlist\np0\n((lp1\nI1\naI2\naI00\ntp2\nRp3\n."
-                )
+        else:
+            pytest.fail("Unknown FrozenList implementation.")
 
 
-class TestFrozenList(FrozenListMixin):
-    FrozenList = FrozenList  # type: ignore[assignment]  # FIXME
+if HAS_CFROZENLIST:
+    # If we don't have CFrozenList, skip adding the test class specifically for it.
+    class TestFrozenList(FrozenListMixin):
+        FrozenList = CFrozenList  # type: ignore[assignment]  # FIXME
 
 
 class TestFrozenListPy(FrozenListMixin):
+    # All implementations will at least have the Python version.
     FrozenList = PyFrozenList  # type: ignore[assignment]  # FIXME
+
+
+def test_frozenlist_aliasing() -> None:
+    """Test that FrozenList name points to the C extension if available, else to PyFrozenList."""
+    if HAS_CFROZENLIST:
+        assert FrozenList is CFrozenList
+    else:
+        assert FrozenList is PyFrozenList

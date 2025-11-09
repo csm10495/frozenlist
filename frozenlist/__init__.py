@@ -13,7 +13,7 @@ NO_EXTENSIONS = bool(os.environ.get("FROZENLIST_NO_EXTENSIONS"))  # type: bool
 
 
 @total_ordering
-class FrozenList(MutableSequence):
+class PyFrozenList(MutableSequence):
     __slots__ = ("_frozen", "_items")
     __class_getitem__ = classmethod(types.GenericAlias)
 
@@ -92,22 +92,18 @@ class FrozenList(MutableSequence):
 
     def __reduce__(self):
         return (
-            _reconstruct_pyfrozenlist,
-            (self._items, self._frozen),
+            self.__class__,
+            (self._items,),
+            {"_frozen": self._frozen},
         )
 
+    def __setstate__(self, state: dict[str, object]):
+        self._frozen = state["_frozen"]
 
-# Store a reference to the pure Python implementation before it's potentially replaced
-PyFrozenList = FrozenList
 
-
-def _reconstruct_pyfrozenlist(items: list[object], frozen: bool) -> PyFrozenList:
-    """Helper function to reconstruct the pure Python FrozenList during unpickling.
-    This function is needed since otherwise the class renaming confuses pickle."""
-    fl = PyFrozenList(items)
-    if frozen:
-        fl.freeze()
-    return fl
+# Rename the pure Python implementation. The C extension (if available) will
+# override this name.
+FrozenList = PyFrozenList
 
 
 if not NO_EXTENSIONS:
