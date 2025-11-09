@@ -77,10 +77,6 @@ class FrozenList(MutableSequence):
     def __deepcopy__(self, memo: dict[int, object]):
         obj_id = id(self)
 
-        # Return existing copy if already processed (circular reference)
-        if obj_id in memo:
-            return memo[obj_id]
-
         # Create new instance and register immediately
         new_list = self.__class__([])
         memo[obj_id] = new_list

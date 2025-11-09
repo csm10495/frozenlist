@@ -281,11 +281,8 @@ class FrozenListMixin:
         copied = deepcopy(orig)
         assert copied[0] == 1
         assert copied[1] == 2
-        assert len(copied[2]) == 3
-        assert copied[2][0] == 1
-        assert copied[2][1] == 2
-        assert len(copied[2][2]) == 3
-        # ... and so on. Testing equality when a structure includes itself is tough.
+        assert copied[2] is copied
+        assert copied is not orig
         assert orig.frozen
 
     def test_deepcopy_nested(self) -> None:
@@ -403,6 +400,42 @@ class FrozenListMixin:
         assert list(unpickled) == list(orig)
 
         assert unpickled.frozen == freeze
+
+    @pytest.mark.parametrize("freeze", [True, False], ids=["frozen", "not frozen"])
+    def test_picklability_forward_compatible(self, freeze: bool) -> None:
+        orig = self.FrozenList([1, 2])
+        if freeze:
+            orig.freeze()
+
+        assert orig.frozen == freeze
+
+        # 0 is the original pickle protocol. It's compatible with all supported Python versions.
+        pickled = pickle.dumps(orig, protocol=0)
+
+        # If this test breaks, we've changed the frozenlist data structure in an incompatible way
+        # with previous pickled binaries.
+        if self.FrozenList is FrozenList:
+            if freeze:
+                assert (
+                    pickled
+                    == b"cfrozenlist._frozenlist\nFrozenList\np0\n((lp1\nI1\naI2\natp2\nRp3\n(dp4\nV_frozen\np5\nI01\nsb."
+                )
+            else:
+                assert (
+                    pickled
+                    == b"cfrozenlist._frozenlist\nFrozenList\np0\n((lp1\nI1\naI2\natp2\nRp3\n(dp4\nV_frozen\np5\nI00\nsb."
+                )
+        elif self.FrozenList is PyFrozenList:
+            if freeze:
+                assert (
+                    pickled
+                    == b"cfrozenlist\n_reconstruct_pyfrozenlist\np0\n((lp1\nI1\naI2\naI01\ntp2\nRp3\n."
+                )
+            else:
+                assert (
+                    pickled
+                    == b"cfrozenlist\n_reconstruct_pyfrozenlist\np0\n((lp1\nI1\naI2\naI00\ntp2\nRp3\n."
+                )
 
 
 class TestFrozenList(FrozenListMixin):
